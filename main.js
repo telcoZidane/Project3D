@@ -166,9 +166,9 @@ function onMouseClick(event) {
         const targetPosition = new THREE.Vector3();
         target.getWorldPosition(targetPosition);
 
-        const duration = 1000; // المدة الزمنية للتحريك بالمللي ثانية
+        const duration = 1000; 
         const startPosition = camera.position.clone();
-        const endPosition = targetPosition.clone().add(new THREE.Vector3(0, 1, 3)); // تعديل المسافة حسب الحاجة
+        const endPosition = targetPosition.clone().add(new THREE.Vector3(-2, 1, 0)); // تعديل المسافة حسب الحاجة
         const startTime = performance.now();
 
         function animateCamera(time) {
@@ -178,7 +178,6 @@ function onMouseClick(event) {
             if (t < 1) {
                 requestAnimationFrame(animateCamera);
             } else {
-                // تأكد من توجيه الكاميرا للنموذج المستهدف بعد انتهاء الحركة
                 camera.lookAt(targetPosition);
             }
         }

@@ -1,5 +1,5 @@
 // import * as THREE from 'three';
-// import Model3D from './Model3D.js'; // تأكد من المسار الصحيح
+// import Model3D from './Model3D.js'; 
 // import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 
@@ -89,9 +89,9 @@
 //         const targetPosition = new THREE.Vector3();
 //         target.getWorldPosition(targetPosition);
 
-//         const duration = 1000; // المدة الزمنية للتحريك بالمللي ثانية
+//         const duration = 1000; 
 //         const startPosition = camera.position.clone();
-//         const endPosition = targetPosition.clone().add(new THREE.Vector3(0, 1, 3)); // تعديل المسافة حسب الحاجة
+//         const endPosition = targetPosition.clone().add(new THREE.Vector3(0, 1, 3));
 //         const startTime = performance.now();
 
 //         function animateCamera(time) {

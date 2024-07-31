@@ -30,3 +30,4 @@ class Model3D {
 }
 
 export default Model3D;
+

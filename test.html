@@ -1,0 +1,813 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id="MyDiv" style="overflow: hidden; background-color: #222222; height: calc(100% - 0px)"></div>
+</body>
+<script>
+
+    var scene, camera, renderer, controls;
+    var loadedObject = null;
+    var fbxObjects = [];
+    var selectedFbxObject = null;
+    var solidMaterial;
+    var wireframeMaterial;
+    var boundingboxMesh;
+    var boundingboxGeometry;
+    var raycaster;
+    var isMouseOver = false;
+
+    function Helper_SetupThreeJsScene() {
+
+        console.log('Helper_SetupThreeJsScene');
+
+        var element;
+        element = document.getElementById('MyDiv');
+
+        var width = $('#MyDiv').width();
+        var height = $('#MyDiv').height();
+
+        console.log(width);
+        console.log(height);
+
+        scene = new THREE.Scene();
+
+        // scene.background = new THREE.Color(0xff0000);
+        // scene.background.a = 0; // Set alpha channel to 0 for transparency
+
+        camera = new THREE.PerspectiveCamera(5, width / height, 1, 5000);
+        camera.position.z = 1000;
+
+        light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
+        light.position.set(0, 1, 0);
+        scene.add(light);
+
+        light = new THREE.DirectionalLight(0xffffff, 1.0);
+        light.position.set(0, 1, 0);
+        scene.add(light);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+
+        // Set the clear color to transparent
+        renderer.setClearColor(0x000000, 0); // Set RGB to black, alpha to 0
+        renderer.setClearAlpha(0.0);
+
+        // renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setSize(width, height);
+
+        // document.body.appendChild(renderer.domElement);
+        // var x = document.getElementById('MyDiv');
+
+        element.appendChild(renderer.domElement);
+
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.addEventListener('change', Helper_Animate);
+
+        // ==============
+        // Event handlers
+        // ==============
+
+        $('#MyDiv').resize(OnThreeJsContainerResized);
+
+        element.addEventListener('mouseenter', onMouseEnter);
+        element.addEventListener('mouseleave', onMouseLeave);
+
+        // ================
+        // Create materials
+        // ================
+
+        wireframeMaterial = new THREE.MeshBasicMaterial({ color: 0xEEEEEE, wireframe: true });
+        solidMaterial = new THREE.MeshPhongMaterial({ color: 0xff0000 });
+
+        raycaster = new THREE.Raycaster();
+    }
+
+    function Helper_LoadModel(url, partToSelect) {
+
+        console.log('Helper_LoadModel');
+
+        console.log('Helper_LoadModel : url = ' + url);
+
+        // =====================================
+        // If necessary, setup the threeJS scene
+        // =====================================
+
+        // if (scene == null)
+        // Helper_SetupThreeJsScene();
+
+        // ===============
+        // Clear the scene
+        // ===============
+
+        Helper_ClearScene();
+
+        // =================
+        // Load the FBX file
+        // =================
+
+        const fbxLoader = new THREE.FBXLoader();
+
+        fbxLoader.load(url,
+            (object) => {
+
+                loadedObject = object;
+
+                // =======================================
+                // Apply a wireframe material to each mesh
+                // =======================================
+
+                // A REMETTRE
+                /*
+                object.traverse(function (child) {
+                    if (child instanceof THREE.Mesh) {
+
+                        child.material = wireframeMaterial;
+                    }
+                });
+                */
+
+                // ==========================================
+                // In case we need to initially select a part
+                // ==========================================
+
+                if (partToSelect != null) {
+                    if (object instanceof THREE.Group) {
+
+                        // ==================
+                        // Enumerate children
+                        // ==================
+
+                        object.children.forEach(function (child) {
+
+                            // console.log(child);
+
+                            if (partToSelect != null && child.name === partToSelect) {
+
+                                // Change the color of the mesh
+                                // child.material.color.set(0xff0000); // Set color to red
+
+                                console.log('FOUND');
+                                console.log(child);
+
+                                child.material = solidMaterial;
+
+                                console.log(child);
+
+                                selectedFbxObject = child;
+                            }
+
+                            fbxObjects.push(child);
+                        });
+                    }
+                }
+
+                // =====
+                // Scale
+                // =====
+
+                object.scale.set(0.1, 0.1, 0.1);
+
+                // =====================
+                // Draw the bounding box
+                // =====================
+
+                Helper_CreateBoundingBoxCube(object);
+
+                // ===============================
+                // Finalize the setup of the scene
+                // ===============================
+
+                scene.add(object);
+
+                Helper_Animate();
+            },
+            onProgress,
+            onError
+        );
+    }
+
+    function onProgress(xhr) {
+
+        if (xhr.lengthComputable) {
+            const percentComplete = xhr.loaded / xhr.total * 100;
+            console.log(Math.round(percentComplete) + '% loaded');
+        }
+    }
+
+    function onError(error) {
+        console.error('An error occurred while loading the FBX file.', error);
+    }
+
+    function Helper_FreeThreeJsResources() {
+
+        console.log('Helper_FreeThreeJsResources');
+
+        if (solidMaterial != null)
+            solidMaterial.dispose();
+
+        if (wireframeMaterial != null)
+            wireframeMaterial.dispose();
+
+        // boundingboxMesh.dispose();
+
+        if (boundingboxGeometry != null)
+            boundingboxGeometry.dispose();
+
+        raycaster = null;
+
+        if (scene != null) {
+
+            while (scene.children.length > 0) {
+                scene.remove(scene.children[0]);
+            }
+        }
+
+        if(renderer != null)
+            renderer.dispose();
+
+        if (controls != null)
+            controls.dispose();
+
+        // =======================
+
+        scene = null;
+        camera = null;
+        renderer = null;
+        controls = null;
+        loadedObject = null;
+        fbxObjects = [];
+        selectedFbxObject = null;
+        solidMaterial = null;
+        wireframeMaterial = null;
+        boundingboxMesh = null;
+        boundingboxGeometry = null;
+        raycaster = null;
+        isMouseOver = false;
+    }
+
+    function Helper_TestGlb() {
+
+        console.log('Helper_TestGlb');
+
+        var loader = new THREE.GLTFLoader();
+
+        loader.load('models/test.glb', function (gltf) {
+
+            console.log('Helper_TestGlb : loaded');
+
+            var model = gltf.scene;
+
+            // Add the model to the scene
+            scene.add(model);
+
+            // Optionally, you can access individual objects in the model
+            // gltf.scene.traverse(function (child) {
+            //     if (child.isMesh) {
+            //         // Manipulate individual mesh objects here
+            //     }
+            // });
+
+            Helper_Animate();
+        });
+    }
+
+    function Helper_CreateBoundingBoxCubeOLD1(object) {
+
+        // Calculate the bounding box of the object
+        const boundingBox = new THREE.Box3().setFromObject(object);
+
+        // Create a wireframe cube geometry based on the dimensions of the bounding box
+        const size = boundingBox.getSize(new THREE.Vector3());
+        boundingboxGeometry = new THREE.BoxGeometry(size.x, size.y, size.z);
+
+        // Create a color attribute for the geometry
+        const colors = [];
+        for (let i = 0; i < boundingboxGeometry.attributes.position.count; i++) {
+            // Set default color for each vertex (green)
+            colors.push(0x00ff00);
+        }
+        boundingboxGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+        // Create a wireframe material for the cube
+        // const wireframeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true });
+        // const wireframeMaterial = new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors, wireframe: true });
+        const wireframeMaterial = new THREE.MeshBasicMaterial({ vertexColors: true, wireframe: true });
+
+        // Create a mesh using the wireframe cube geometry and material
+        boundingboxMesh = new THREE.Mesh(boundingboxGeometry, wireframeMaterial);
+
+        // Set the position of the wireframe mesh to the center of the bounding box
+        const center = boundingBox.getCenter(new THREE.Vector3());
+        boundingboxMesh.position.copy(center);
+
+        // Add the wireframe mesh to the scene
+        scene.add(boundingboxMesh);
+
+        // ============================
+
+        /*
+        // Create a custom shader material
+        const customMaterial = new THREE.ShaderMaterial({
+            vertexShader: `
+            varying vec3 vNormal;
+            void main() {
+                vNormal = normal;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+            fragmentShader: `
+            varying vec3 vNormal;
+            void main() {
+                // Use the depth buffer to determine if the vertex is occluded
+                float depth = gl_FragCoord.z / gl_FragCoord.w;
+                if (depth < 0.999) { // Adjust this threshold as needed
+                    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); // Color occluded vertices red
+                } else {
+                    gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); // Color visible vertices green
+                }
+            }
+        `,
+            depthTest: true // Enable depth testing
+        });
+
+        // Apply the custom material to your wireframe cube mesh
+        const customWireframeCube = new THREE.Mesh(wireframeGeometry, customMaterial);
+        scene.add(customWireframeCube);
+        */
+    }
+
+    function Helper_CreateBoundingBoxCubeOLD2(object) {
+
+        // Calculate the bounding box of the object
+        const boundingBox = new THREE.Box3().setFromObject(object);
+
+        // Create a wireframe cube geometry based on the dimensions of the bounding box
+        const size = boundingBox.getSize(new THREE.Vector3());
+        boundingboxGeometry = new THREE.BoxGeometry(size.x, size.y, size.z);
+
+        // Step 2: Create an array of colors for each edge
+        var colors = [
+            new THREE.Color(0xff0000), // red
+            new THREE.Color(0x00ff00), // green
+            new THREE.Color(0x0000ff), // blue
+            new THREE.Color(0xffff00), // yellow
+            new THREE.Color(0xff00ff), // magenta
+            new THREE.Color(0x00ffff), // cyan
+            new THREE.Color(0xffffff), // white
+            new THREE.Color(0x808080)  // gray
+        ];
+
+        // Step 3: Define the indices of the cube's edges
+        var edges = [
+            [0, 1], [1, 3], [2, 3], [0, 2], // top face
+            [4, 5], [5, 7], [6, 7], [4, 6], // bottom face
+            // [0, 4], [1, 5], [2, 6], [3, 7]  // vertical edges
+            [0, 5], [1, 4], [3, 6], [2, 7]  // vertical edges
+        ];
+
+        // Step 4: Create a geometry for the line segments
+        var lineGeometry = new THREE.BufferGeometry();
+
+        // Step 5: Create arrays to hold vertices and colors
+        var vertices = [];
+        var lineColors = [];
+
+        // Step 6: Loop through the edges of the cube and create line segments with assigned colors
+        edges.forEach(function (edge) {
+            var start = new THREE.Vector3();
+            var end = new THREE.Vector3();
+
+            start.fromBufferAttribute(boundingboxGeometry.attributes.position, edge[0]);
+            end.fromBufferAttribute(boundingboxGeometry.attributes.position, edge[1]);
+
+            vertices.push(start.x, start.y, start.z);
+            vertices.push(end.x, end.y, end.z);
+
+            lineColors.push(colors[edge[0]].r, colors[edge[0]].g, colors[edge[0]].b);
+            lineColors.push(colors[edge[1]].r, colors[edge[1]].g, colors[edge[1]].b);
+        });
+
+        // var edgeColors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff, 0xffffff, 0x000000, 0x800000, 0x008000, 0x000080, 0x808000, 0x800080, 0x008080, 0x808080];
+
+        // XXX Create line segments for each edge with solid colors
+        /*
+        edges.forEach(function (edge, index) {
+            var start = new THREE.Vector3();
+            var end = new THREE.Vector3();
+
+            start.fromBufferAttribute(geometry.attributes.position, edge[0]);
+            end.fromBufferAttribute(geometry.attributes.position, edge[1]);
+
+            var lineGeometry = new THREE.BufferGeometry().setFromPoints([start, end]);
+            var lineMaterial = new THREE.LineBasicMaterial({ color: edgeColors[index] });
+            var line = new THREE.LineSegments(lineGeometry, lineMaterial);
+
+            scene.add(line);
+        });
+        */
+
+        // XXX Create line segments for all edges with solid colors
+        /*
+        var lines = new THREE.LineSegments();
+        edges.forEach(function (edge, index) {
+            var start = new THREE.Vector3();
+            var end = new THREE.Vector3();
+
+            start.fromBufferAttribute(geometry.attributes.position, edge[0]);
+            end.fromBufferAttribute(geometry.attributes.position, edge[1]);
+
+            var lineGeometry = new THREE.BufferGeometry().setFromPoints([start, end]);
+            var lineMaterial = new THREE.LineBasicMaterial({ color: edgeColors[index] });
+
+            lineGeometry.addGroup(0, 2, index); // Each line segment contains two vertices
+            lines.geometry.merge(lineGeometry, 0, index); // Merge line geometries
+        });
+        */
+
+        // Step 7: Add vertices and colors to the geometry
+        lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        lineGeometry.setAttribute('color', new THREE.Float32BufferAttribute(lineColors, 3));
+
+        // Step 8: Create a material for the line segments
+        var lineMaterial = new THREE.LineBasicMaterial({ vertexColors: THREE.VertexColors });
+
+        // Step 9: Create the line segments object
+        var boundingboxMesh = new THREE.LineSegments(lineGeometry, lineMaterial);
+
+        // Set the position of the wireframe mesh to the center of the bounding box
+        const center = boundingBox.getCenter(new THREE.Vector3());
+        boundingboxMesh.position.copy(center);
+
+        // Add the wireframe to the scene
+        scene.add(boundingboxMesh);
+    }
+
+    function Helper_CreateBoundingBoxCube(object) {
+
+        // Calculate the bounding box of the object
+        const boundingBox = new THREE.Box3().setFromObject(object);
+
+        // Create a wireframe cube geometry based on the dimensions of the bounding box
+        const size = boundingBox.getSize(new THREE.Vector3());
+        boundingboxGeometry = new THREE.BoxGeometry(size.x, size.y, size.z);
+
+        // Step 2: Create an array of colors for each edge
+        // var colors = [
+        //     new THREE.Color(0xff0000), // red
+        //     new THREE.Color(0x00ff00), // green
+        //     new THREE.Color(0x0000ff), // blue
+        //     new THREE.Color(0xffff00), // yellow
+        //     new THREE.Color(0xff00ff), // magenta
+        //     new THREE.Color(0x00ffff), // cyan
+        //     new THREE.Color(0xffffff), // white
+        //     new THREE.Color(0x808080)  // gray
+        // ];
+
+        // Step 3: Define the indices of the cube's edges
+        var edges = [
+            [0, 1], [1, 3], [2, 3], [0, 2], // top face
+            [4, 5], [5, 7], [6, 7], [4, 6], // bottom face
+            // [0, 4], [1, 5], [2, 6], [3, 7]  // vertical edges
+            [0, 5], [1, 4], [3, 6], [2, 7]  // vertical edges
+        ];
+
+        // Step 4: Create a geometry for the line segments
+        // var lineGeometry = new THREE.BufferGeometry();
+
+        var edgeColors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff, 0xffffff, 0x000000, 0x800000, 0x008000, 0x000080, 0x808000, 0x800080, 0x008080, 0x808080];
+
+        boundingboxMesh = new THREE.LineSegments();
+
+        // Create line segments for all edges with solid colors
+
+        edges.forEach(function (edge, index) {
+            var start = new THREE.Vector3();
+            var end = new THREE.Vector3();
+
+            start.fromBufferAttribute(boundingboxGeometry.attributes.position, edge[0]);
+            end.fromBufferAttribute(boundingboxGeometry.attributes.position, edge[1]);
+
+            var lineGeometry = new THREE.BufferGeometry().setFromPoints([start, end]);
+
+            // ATTENTION
+            // var lineMaterial = new THREE.LineBasicMaterial({ color: edgeColors[index] });
+            var lineMaterial = new THREE.LineBasicMaterial({ color: 0xcccccc });
+
+            // lineGeometry.addGroup(0, 2, index); // Each line segment contains two vertices
+            // boundingboxMesh.geometry.merge(lineGeometry, 0, index); // Merge line geometries
+            // boundingboxMesh.material = lineMaterial; // Assign material to line segments
+
+            // Assign material to line geometry
+            var line = new THREE.LineSegments(lineGeometry, lineMaterial);
+
+            boundingboxMesh.add(line);
+        });
+
+        // Step 7: Add vertices and colors to the geometry
+        // lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        // lineGeometry.setAttribute('color', new THREE.Float32BufferAttribute(lineColors, 3));
+
+        // Step 8: Create a material for the line segments
+        // var lineMaterial = new THREE.LineBasicMaterial({ vertexColors: THREE.VertexColors });
+
+        // Step 9: Create the line segments object
+        // var boundingboxMesh = new THREE.LineSegments(lineGeometry, lineMaterial);
+
+        // Set the position of the wireframe mesh to the center of the bounding box
+        const center = boundingBox.getCenter(new THREE.Vector3());
+        boundingboxMesh.position.copy(center);
+
+        // Add the wireframe to the scene
+        scene.add(boundingboxMesh);
+    }
+
+    function Helper_UpdateVertexColorsOfBoundingBoxOLD1() {
+
+        // Create a raycaster from the camera position
+        // const raycaster = new THREE.Raycaster(camera.position, new THREE.Vector3());
+        const raycaster = new THREE.Raycaster();
+
+        // Iterate over each vertex in the cube geometry
+        // boundingboxGeometry.vertices.forEach((vertex, index) => {
+        boundingboxGeometry.attributes.position.array.forEach((vertex, index) => {
+
+            // Set the raycaster position to the vertex position
+            // raycaster.set(boundingboxMesh.position, vertex.clone().sub(boundingboxMesh.position).normalize());
+            raycaster.set(boundingboxMesh.position, vertex);
+
+            // Check if the raycaster intersects the cube geometry
+            const intersects = raycaster.intersectObject(boundingboxMesh);
+
+            // Assign color based on visibility
+            const color = intersects.length > 0 ? new THREE.Color(0xff0000) : new THREE.Color(0x00ff00);
+
+            // Update the vertex color
+            // boundingboxGeometry.colors[index] = color;
+            boundingboxGeometry.attributes.color.setXYZ(index, color.r, color.g, color.b);
+
+            /*
+            // Get the position of the vertex
+            const position = new THREE.Vector3(vertex.x, vertex.y, vertex.z);
+
+            // Transform the vertex position to world space
+            position.applyMatrix4(boundingboxMesh.matrixWorld);
+
+            // Set the raycaster direction to the position of the vertex
+            raycaster.ray.direction.copy(position).sub(camera.position).normalize();
+
+            // Check if the raycaster intersects any objects (i.e., if the vertex is visible)
+            const intersects = raycaster.intersectObject(boundingboxMesh);
+
+            // Assign color based on visibility
+            const color = intersects.length > 0 ? new THREE.Color(0xff0000) : new THREE.Color(0x00ff00);
+
+            // Update the vertex color
+            boundingboxGeometry.attributes.color.setXYZ(index, color.r, color.g, color.b);
+            */
+        });
+
+        // Mark the geometry as having vertex colors
+        boundingboxGeometry.attributes.color.needsUpdate = true;
+        boundingboxGeometry.colorsNeedUpdate = true;
+    }
+
+    function Helper_UpdateVertexColorsOfBoundingBoxOLD2() {
+
+        console.log("Coucou 1");
+
+        // Update the raycaster with the camera's position and direction
+        raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+
+        console.log("Coucou 2");
+
+        // Perform raycasting
+        const intersects = raycaster.intersectObject(boundingboxMesh);
+
+        console.log("Coucou 3");
+
+        // Reset colors of all edges
+        boundingboxMesh.children.forEach(line => {
+            line.material.color.set(0xffffff); // Set color to white
+        });
+
+        console.log("Coucou 4");
+
+        // Change color of occluded edges
+        intersects.forEach(intersect => {
+            // Assuming intersect.object contains the intersected edge
+            const intersectedEdge = intersect.object;
+
+            // Change color of the intersected edge
+            intersectedEdge.material.color.set(0xff0000); // Set color to red
+        });
+    }
+
+    function Helper_UpdateVertexColorsOfBoundingBox() {
+
+        // Set raycaster parameters
+        raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+
+        // Array to store visible lines
+        var visibleLines = [];
+
+        // Traverse each line segment in the bounding box mesh
+        boundingboxMesh.children.forEach(function (line) {
+            // Perform raycasting for each line
+            var intersects = raycaster.intersectObject(line);
+
+            // If the line is intersected, it's visible
+            if (intersects.length > 0) {
+                visibleLines.push(line);
+            } else {
+                // Line is occluded, change its material color
+                line.material.color.set(0xff0000); // Change color to red (for example)
+            }
+        });
+
+        // Reset material color for visible lines
+        visibleLines.forEach(function (line) {
+            line.material.color.set(0xffffff); // Change color back to white (for example)
+        });
+    }
+
+    function Helper_UpdateVertexColorsOfBoundingBoxOLD3() {
+
+        // Set raycaster parameters
+        raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+
+        // Traverse the object hierarchy
+        boundingboxMesh.traverse(function (child) {
+
+            // Check if the child is a line segment
+            if (child instanceof THREE.LineSegments) {
+                // Get the vertices of the current line segment
+                var v1 = child.geometry.vertices[0].clone();
+                var v2 = child.geometry.vertices[1].clone();
+
+                // Transform vertices to world space
+                v1.applyMatrix4(child.matrixWorld);
+                v2.applyMatrix4(child.matrixWorld);
+
+                // Perform raycasting for each line segment
+                var intersects = raycaster.intersectLine(v1, v2);
+
+                // If the line is intersected, it's visible
+                if (intersects.length > 0) {
+                    // Reset material color to its original color
+                    child.material.color.set(0xffffff);
+                } else {
+                    // Line is occluded, change its material color
+                    child.material.color.set(0xff0000); // Change color to red
+                }
+            }
+        });
+    }
+
+    function Helper_HighlightObject(name) {
+
+        console.log('Helper_HighlightObject');
+
+        console.log('Helper_HighlightObject : name = ' + name);
+
+        // HACK
+        // return;
+
+        // =======================================
+        // Apply a wireframe material to each mesh
+        // =======================================
+
+        // object.traverse(function (child) {
+        //     if (child instanceof THREE.Mesh) {
+
+        //         child.material = wireframeMaterial;
+        //     }
+        // });
+
+        // ==========================
+        // Highlight the given object
+        // ==========================
+
+        var found = fbxObjects.find(function (item) {
+            return item.name === name;
+        });
+
+        if (found) {
+
+            console.log('FOUND');
+            console.log(found);
+
+            found.material = solidMaterial;
+
+            if (selectedFbxObject != null) {
+
+                console.log('OLD');
+                console.log(selectedFbxObject);
+
+                selectedFbxObject.material = wireframeMaterial;
+            }
+
+            selectedFbxObject = found;
+        }
+    }
+
+    function Helper_Animate() {
+
+        if (scene == null)
+            return;
+
+        // ==========================
+        // If necessary, rotate scene
+        // ==========================
+
+        if (!isMouseOver) {
+
+            scene.rotation.y += 0.01;
+        }
+
+        // Helper_UpdateVertexColorsOfBoundingBox();
+
+        // ======
+        // Render
+        // ======
+
+        renderer.render(scene, camera);
+
+        requestAnimationFrame(Helper_Animate);
+
+        // TWEEN.update();
+    }
+
+    function onMouseEnter() {
+        isMouseOver = true;
+    }
+
+    function onMouseLeave() {
+        isMouseOver = false;
+    }
+
+    function Helper_ZoomToObject(object) {
+
+        // Calculate the bounding box of the object
+        var boundingBox = new THREE.Box3().setFromObject(object);
+
+        // Calculate the center of the bounding box
+        var center = boundingBox.getCenter(new THREE.Vector3());
+
+        // Calculate the size of the bounding box
+        var size = boundingBox.getSize(new THREE.Vector3());
+
+        // Calculate the distance to the object based on the size of the bounding box
+        var distance = Math.max(size.x, size.y, size.z) * 2;
+
+        // Calculate the new position of the camera
+        var newPosition = new THREE.Vector3().copy(center);
+        newPosition.z += distance;
+
+        // Calculate the new look at target of the camera
+        var lookAtTarget = center;
+
+        // Animate the camera to the new position and look at target
+        var tween = new TWEEN.Tween(camera.position).to(newPosition, 1000).start();
+        var tween2 = new TWEEN.Tween(camera.lookAt()).to(lookAtTarget, 1000).start();
+    }
+
+    function Helper_ClearScene() {
+
+        if (loadedObject == null)
+            return;
+
+        scene.remove(loadedObject);
+
+        loadedObject = null;
+
+        // ==================================
+        // Remove all children from the scene
+        // ==================================
+
+        // while (scene.children.length > 0) {
+        //     scene.remove(scene.children[0]);
+        // }
+    }
+
+    function OnThreeJsContainerResized() {
+        // console.log('OnThreeJsContainerResized');
+
+        var width = $('#MyDiv').width();
+        var height = $('#MyDiv').height();
+
+        // console.log(width);
+        // console.log(height);
+
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(width, height);
+    }
+
+</script>
+</html>

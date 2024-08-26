@@ -1,14 +1,15 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-
+import { TypeModel } from './EnumTypeModel.js';
 class Model3D {
-    constructor(scene, url, position = { x: 0, y: 0, z: 0 }, scale = 1) {
+    constructor(scene, url, position = { x: 0, y: 0, z: 0 }, scale = 1,TypeModel=1) {
         this.scene = scene;
         this.url = url;
         this.position = position;
         this.scale = scale;
         this.loader = new GLTFLoader();
         this.clicked = false;
+        this.TypeModel=TypeModel;
     }
 
     loadModel() {
@@ -23,7 +24,6 @@ class Model3D {
                 this.model.traverse((child) => {
                     if (child.isMesh) {
                         child.userData = this;
-                        child.on('click', (event) => this.onClick(event));
                     }
                 });
             },
@@ -34,9 +34,10 @@ class Model3D {
         );
     }
 
-    onClick(event) {
+    onClick() {
         console.log("Clicked model at:", this.position);
         this.clicked = true;
+        return this.position;
     }
 }
 

@@ -15,7 +15,7 @@ document.getElementById('container').appendChild(renderer.domElement);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.dampingFactor = 0.25;
+controls.dampingFactor = 1;
 controls.enableZoom = true;
 
 const light = new THREE.DirectionalLight(0xffffff, 5);
@@ -28,15 +28,27 @@ scene.add(leftlight);
 const ambientLight = new THREE.AmbientLight(0x404040);
 scene.add(ambientLight);
 
-const officeModel = new Model3D(scene, '/model/Office_base3.glb', { x: 0, y: 0, z: 0 }, 2,TypeModel.SUPPER_MODEL);
-const pcModel = new Model3D(scene, '/model/ModelPc.glb', { x: 5, y: 0, z: -13 }, 1,TypeModel.OBJECT_MODEL);
-const bicycleModel = new Model3D(scene, '/model/Bicycle.glb', { x: -5, y: 0, z: -1 }, 1,TypeModel.OBJECT_MODEL);
-
+// const officeModel = new Model3D(scene, '/model/Office_base05.glb', { x: 0, y: -0.5, z: 0 }, 2, TypeModel.SUPPER_MODEL);
+// const pcModel = new Model3D(scene, '/model/ModelPc.glb', { x: 5, y: 0, z: -12 }, 1, TypeModel.OBJECT_MODEL);
+// const bicycleModel = new Model3D(scene, '/model/Bicycle.glb', { x: -5, y: 0, z: -1 }, 1, TypeModel.OBJECT_MODEL);
+const officeModel = new Model3D(
+    scene,
+    '/model/Office_base06.glb', 
+    { x: 0, y: -0.5, z: 0 }, 
+    2, 
+    TypeModel.SUPPER_MODEL, 
+    3, // Nombre d'étages
+    [
+        [{ url: '/model/ModelPc.glb', position: { x: 1, y: 0, z: 1 }, scale: 1 }], // Modèle pour l'étage 0
+        [{ url: '/model/Bicycle.glb', position: { x: -1, y: 0, z: -1 }, scale: 0.5 }], // Modèle pour l'étage 1
+        [] // Aucun modèle pour l'étage 2
+    ]
+);
 officeModel.loadModel();
-pcModel.loadModel();
-bicycleModel.loadModel();
+// pcModel.loadModel();
+// bicycleModel.loadModel();
 
-const models = [officeModel, pcModel, bicycleModel];
+// const models = [officeModel, pcModel, bicycleModel];
 
 function onMouseClick(event) {
     const raycaster = new THREE.Raycaster();
@@ -73,47 +85,47 @@ function onMouseClick(event) {
                 child.material.opacity = 1;
             }
         });
-        if(model.TypeModel!== TypeModel.SUPPER_MODEL)
-        {
-            // Get the target's position and direction
-            const targetPosition = model.onClick();
+        if (model.TypeModel !== TypeModel.SUPPER_MODEL) {
+            const targetPosition = new THREE.Vector3();
+            target.getWorldPosition(targetPosition);
+            
             const direction = new THREE.Vector3();
             target.getWorldDirection(direction);
-
-            // Adjust direction to avoid only vertical movement
-            if (Math.abs(direction.y) > 0.9) {
-                direction.x = direction.z = 0.5;
-                direction.y = 0.5;
-                direction.normalize();
-            }
-
-            // Calculate the new camera position
+            
             const distance = 5;
-            const offset = direction.clone().multiplyScalar(-distance);
-            const newCameraPosition = new THREE.Vector3(targetPosition.x, targetPosition.y, targetPosition.z).add(offset);
-            newCameraPosition.y += 1;
-            newCameraPosition.normalize();
+            const offset = direction.clone().multiplyScalar(distance);
+            const newCameraPosition = targetPosition.clone().add(offset);
+            newCameraPosition.y += 0.25 ;
+            newCameraPosition.x *= (newCameraPosition.x>0)? -1.7 : 1.7
 
-            // Animate the camera to the new position
-            const duration = 1000;
             const startPosition = camera.position.clone();
             const startTime = performance.now();
-
+            const duration = 1000;
             function animateCamera(time) {
                 const elapsed = time - startTime;
                 const t = Math.min(elapsed / duration, 1);
+            
                 camera.position.lerpVectors(startPosition, newCameraPosition, t);
-                camera.lookAt(targetPosition);
+                // camera.lookAt(targetPosition); 
+            
                 if (t < 1) {
                     requestAnimationFrame(animateCamera);
                 }
             }
             requestAnimationFrame(animateCamera);
+        } else if (model.TypeModel === TypeModel.SUPPER_MODEL) {
+            models.forEach((model) => {
+                if (model.model) {
+                    model.clicked = false;
+                    model.model.traverse((child) => {
+                        if (child.material) {
+                            child.material.transparent = true;
+                            child.material.opacity = 0.5;
+                        }
+                    });
+                }
+            });
         }
-        else if(model.TypeModel=== TypeModel.SUPPER_MODEL){
-
-        }
-      
     }
 }
 

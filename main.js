@@ -33,7 +33,7 @@ scene.add(ambientLight);
 // const bicycleModel = new Model3D(scene, '/model/Bicycle.glb', { x: -5, y: 0, z: -1 }, 1, TypeModel.OBJECT_MODEL);
 const officeModel = new Model3D(
     scene,
-    '/model/Office_base06.glb', 
+    '/model/Office_base04.glb', 
     { x: 0, y: -0.5, z: 0 }, 
     2, 
     TypeModel.SUPPER_MODEL, 
@@ -48,7 +48,8 @@ officeModel.loadModel();
 // pcModel.loadModel();
 // bicycleModel.loadModel();
 
-// const models = [officeModel, pcModel, bicycleModel];
+//, pcModel, bicycleModel 
+const models = [officeModel];
 
 function onMouseClick(event) {
     const raycaster = new THREE.Raycaster();
@@ -65,7 +66,7 @@ function onMouseClick(event) {
         const model = target.userData;
 
         // Reset opacity for all models
-        models.forEach((model) => {
+        officeModel.forEach((model) => {
             if (model.model) {
                 model.clicked = false;
                 model.model.traverse((child) => {

@@ -90,7 +90,7 @@ class Model3D {
         for (let i = 0; i < this.numFloors; i++) {
             // Crée un étage
             const floor = this.model.clone();
-            floor.position.y += i * 10; // Ajuste la distance selon scale ou autre critère
+            floor.position.y += i * 6.5; // Ajuste la distance selon scale ou autre critère
             
             // Ajoute des modèles enfants à cet étage, s'ils existent
             if (this.childrenModels[i]) {

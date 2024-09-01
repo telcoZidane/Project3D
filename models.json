@@ -1,0 +1,55 @@
+[
+    {
+        "type": "Office",
+        "url": "/models/Office_base06.glb",
+        "position": { "x": 0, "y": -0.5, "z": 0 },
+        "scale": 2,
+        "status": "Operational",
+        "components": [
+            {
+                "type": "PC",
+                "url": "/models/ModelPc.glb",
+                "position": { "x": 1, "y": 0, "z": -2 },
+                "scale": 1,
+                "status": "Working"
+            },
+            {
+                "type": "PC",
+                "url": "/models/ModelPc.glb",
+                "position": { "x": 3, "y": 0, "z": -2 },
+                "scale": 1,
+                "status": "Not Working"
+            },
+            {
+                "type": "PC",
+                "url": "/models/ModelPc.glb",
+                "position": { "x": 5, "y": 0, "z": -2 },
+                "scale": 1,
+                "status": "Needs Maintenance"
+            }
+        ]
+    },
+    {
+        "type": "Office",
+        "url": "/models/Office_base06.glb",
+        "position": { "x": 10, "y": -0.5, "z": 0 },
+        "scale": 2,
+        "status": "Operational",
+        "components": [
+            {
+                "type": "PC",
+                "url": "/models/ModelPc.glb",
+                "position": { "x": 1, "y": 0, "z": -2 },
+                "scale": 1,
+                "status": "Working"
+            },
+            {
+                "type": "PC",
+                "url": "/models/ModelPc.glb",
+                "position": { "x": 3, "y": 0, "z": -2 },
+                "scale": 1,
+                "status": "Working"
+            }
+        ]
+    }
+]

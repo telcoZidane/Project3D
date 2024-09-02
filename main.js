@@ -3,31 +3,47 @@ import { OrbitControls } from "/node_modules/.vite/deps/three_examples_jsm_contr
 import { GLTFLoader } from "/node_modules/.vite/deps/three_examples_jsm_loaders_GLTFLoader__js.js?v=de254aad";
 import { FBXLoader } from "/node_modules/.vite/deps/three_examples_jsm_loaders_FBXLoader__js.js?v=de254aad";
 
+// import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js";
+// import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js";
+// import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js";
+// import { FBXLoader } from "https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/FBXLoader.js";
+
+// Scene setup
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87CEEB);
 
+// Camera setup
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(10, 10, 10);
 camera.lookAt(new THREE.Vector3(0, 0, 0));
 
+// Renderer setup
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+// Controls setup
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.2;
 controls.enableZoom = true;
 
+// Lights setup
 const lightLeft = new THREE.DirectionalLight(0xffffff, 5);
 lightLeft.position.set(10, 10, 10).normalize();
 scene.add(lightLeft);
 const lightRight = new THREE.DirectionalLight(0xffffff, 5);
 lightRight.position.set(-10, 10, 10).normalize();
 scene.add(lightRight);
-
 const ambientLight = new THREE.AmbientLight(0x404040);
 scene.add(ambientLight);
+
+// Add floor
+const floorGeometry = new THREE.PlaneGeometry(1000, 1000);
+const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x808080 });
+const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+floor.rotation.x = -Math.PI / 2; // Rotate floor to be horizontal
+scene.add(floor);
 
 let models = [];
 
@@ -51,13 +67,14 @@ async function fetchModelData() {
 }
 
 class SimpleModel {
-    constructor(url, position, scale, type,status, components = []) {
+    constructor(url, position, scale, type, status,description, components = []) {
         this.url = url;
         this.position = position;
         this.scale = scale;
         this.type = type;
         this.model = null;
         this.status = status;
+        this.description =description;
         this.components = components;  // To store child components like PCs
     }
 
@@ -80,6 +97,8 @@ class SimpleModel {
 
             // Load child components if any
             this.loadComponents(scene);
+            // Set initial color based on status
+            this.updateColor();
         }, undefined, (error) => {
             console.error('Error loading model:', error);
         });
@@ -96,7 +115,8 @@ class SimpleModel {
                 },
                 componentData.scale,
                 componentData.type,
-                componentData.status
+                componentData.status,
+                componentData.description
             );
             component.load(scene);
             models.push(component);
@@ -113,12 +133,25 @@ class SimpleModel {
             });
         }
     }
+
+    updateColor() {
+        if (this.model) {
+            if(this.type!== 1){
+                const color = this.status === 1 ? 0x00ff00 : 0xff0000; // Green if active, red otherwise
+                this.model.traverse((child) => {
+                    if (child.isMesh) {
+                        child.material.color.set(color);
+                    }
+                });
+            }
+        }
+    }
 }
 
 // Function to create models from the local JSON data
 function createModelsFromAPI(modelData) {
     modelData.forEach(item => {
-        const model = new SimpleModel(item.url, item.position, item.scale, item.type, item.status, item.components);
+        const model = new SimpleModel(item.url, item.position, item.scale, item.type, item.status,item.description, item.components);
         model.load(scene);
         models.push(model);
     });
@@ -145,7 +178,10 @@ function onMouseClick(event) {
                     model.setOpacity(0.5);
                 } else {
                     model.setOpacity(1);
-                    moveCameraToTarget(parentModel.model);
+                    // Only move camera if the model type is not 'support'
+                    if (parentModel.type !== 1) {
+                        moveCameraToTarget(parentModel.model);
+                    }
                 }
             });
 
@@ -185,9 +221,9 @@ function displayStatusCard(model) {
     statusCard.style.display = 'block';
 
     statusCard.innerHTML = `
-        <h3>${model.type} Status</h3>
+        <h3>${model.type === 1 } Status</h3>
         <p>Position: X=${model.position.x}, Y=${model.position.y}, Z=${model.position.z}</p>
-        <p>Status: ${model.status || 'N/A'}</p>
+        <p>Status: ${model.description || 'N/A'}</p>
     `;
 }
 
@@ -199,6 +235,7 @@ fetchModelData().then(data => {
 // Event listener for mouse click
 window.addEventListener('click', onMouseClick);
 
+// Animation loop
 function animate() {
     requestAnimationFrame(animate);
     controls.update();
@@ -206,3 +243,13 @@ function animate() {
 }
 
 animate();
+
+const ModelsType = Object.freeze({
+    SUPPER_MODEL: 0,
+    OBJECT_MODEL: 1,
+});
+
+const ModelStatus = Object.freeze({
+    Working : 1,
+    Not_Working: 2,
+});

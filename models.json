@@ -1,54 +1,60 @@
 [
     {
-        "type": "Office",
+        "type": 1,
         "url": "/models/Office_base06.glb",
         "position": { "x": 0, "y": -0.5, "z": 0 },
         "scale": 2,
-        "status": "Operational",
+        "status": 1,
+        "description":"Operational",
         "components": [
             {
-                "type": "PC",
+                "type": 2,
                 "url": "/models/ModelPc.glb",
                 "position": { "x": 1, "y": 0, "z": -2 },
                 "scale": 1,
-                "status": "Working"
+                "status": 1,
+                "description":"Working"
             },
             {
-                "type": "PC",
+                "type": 2,
                 "url": "/models/ModelPc.glb",
                 "position": { "x": 3, "y": 0, "z": -2 },
                 "scale": 1,
-                "status": "Not Working"
+                "status": 2,
+                "description":"Not Working"
             },
             {
-                "type": "PC",
+                "type": 2,
                 "url": "/models/ModelPc.glb",
                 "position": { "x": 5, "y": 0, "z": -2 },
                 "scale": 1,
-                "status": "Needs Maintenance"
+                "status": 1,
+                "description":"Working"
             }
         ]
     },
     {
-        "type": "Office",
+        "type": 1,
         "url": "/models/Office_base06.glb",
         "position": { "x": 10, "y": -0.5, "z": 0 },
         "scale": 2,
-        "status": "Operational",
+        "status": 1,
+        "description":"Operational",
         "components": [
             {
-                "type": "PC",
+                "type": 2,
                 "url": "/models/ModelPc.glb",
                 "position": { "x": 1, "y": 0, "z": -2 },
-                "scale": 1,
-                "status": "Working"
+                "scale":  1,
+                "description":"Working"
             },
             {
-                "type": "PC",
+                "type": 2,
                 "url": "/models/ModelPc.glb",
                 "position": { "x": 3, "y": 0, "z": -2 },
                 "scale": 1,
-                "status": "Working"
+                "status": 2,
+                "description":"Working"
             }
         ]
     }

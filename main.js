@@ -12,6 +12,7 @@ import { FBXLoader } from "/node_modules/.vite/deps/three_examples_jsm_loaders_F
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87CEEB);
 
+
 // Camera setup
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(10, 10, 10);
@@ -42,7 +43,8 @@ scene.add(ambientLight);
 const floorGeometry = new THREE.PlaneGeometry(1000, 1000);
 const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x808080 });
 const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-floor.rotation.x = -Math.PI / 2; // Rotate floor to be horizontal
+floor.rotation.x = -Math.PI / 2;
+floor.position.set(0,-1,0) // Rotate floor to be horizontal
 scene.add(floor);
 
 let models = [];
@@ -65,6 +67,40 @@ async function fetchModelData() {
         return [];
     }
 }
+
+class EnumHandler {
+    constructor(enumObject) {
+        this.enumObject = enumObject;
+    }
+
+    getDisplayNameByValue(value) {
+        for (const key in this.enumObject) {
+            if (this.enumObject[key].value === value) {
+                return this.enumObject[key].displayName;
+            }
+        }
+        return null;
+    }
+
+    getDisplayNameByKey(key) {
+        return this.enumObject[key]?.displayName || null;
+    }
+}
+
+const ModelsType = Object.freeze({
+    SUPPER_MODEL: { displayName: "Office Model", value: 1 },
+    PC_MODEL: { displayName: "PC Model", value: 2 },
+});
+
+const ModelStatus = Object.freeze({
+    Suppoer: { displayName: "Suppoer Model", value: 0 },
+    Working: { displayName: "Working", value: 1 },
+    Not_Working: { displayName: "Not Working", value: 2 },
+});
+
+// Create instances of EnumHandler
+const modelsTypeHandler = new EnumHandler(ModelsType);
+const modelStatusHandler = new EnumHandler(ModelStatus);
 
 class SimpleModel {
     constructor(url, position, scale, type, status,description, components = []) {
@@ -221,11 +257,13 @@ function displayStatusCard(model) {
     statusCard.style.display = 'block';
 
     statusCard.innerHTML = `
-        <h3>${model.type === 1 } Status</h3>
+        <h3>${modelsTypeHandler.getDisplayNameByValue(model.type)} Status</h3>
         <p>Position: X=${model.position.x}, Y=${model.position.y}, Z=${model.position.z}</p>
-        <p>Status: ${model.description || 'N/A'}</p>
+        <p>Status: ${modelStatusHandler.getDisplayNameByValue(model.status) || 'N/A'}</p>
+        <p>Description: ${model.description || 'No description available'}</p>
     `;
 }
+
 
 // Fetch model data from local JSON and load models
 fetchModelData().then(data => {
@@ -244,12 +282,5 @@ function animate() {
 
 animate();
 
-const ModelsType = Object.freeze({
-    SUPPER_MODEL: 0,
-    OBJECT_MODEL: 1,
-});
 
-const ModelStatus = Object.freeze({
-    Working : 1,
-    Not_Working: 2,
-});
+

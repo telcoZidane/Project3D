@@ -3,7 +3,7 @@
         "type": 1,
         "url": "/models/Office_base06.glb",
         "position": { "x": 0, "y": -0.5, "z": 0 },
-        "scale": 2,
+        "scale": 4,
         "status": 1,
         "description":"Operational",
         "components": [
@@ -37,7 +37,7 @@
         "type": 1,
         "url": "/models/Office_base06.glb",
         "position": { "x": 10, "y": -0.5, "z": 0 },
-        "scale": 2,
+        "scale": 4,
         "status": 1,
         "description":"Operational",
         "components": [
@@ -54,7 +54,7 @@
                 "position": { "x": 3, "y": 0, "z": -2 },
                 "scale": 1,
                 "status": 2,
-                "description":"Working"
+                "description":"Working" 
             }
         ]
     }

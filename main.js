@@ -1,7 +1,7 @@
-import * as THREE from "/node_modules/.vite/deps/three.js?v=de254aad";
-import { OrbitControls } from "/node_modules/.vite/deps/three_examples_jsm_controls_OrbitControls__js.js?v=de254aad";
-import { GLTFLoader } from "/node_modules/.vite/deps/three_examples_jsm_loaders_GLTFLoader__js.js?v=de254aad";
-import { FBXLoader } from "/node_modules/.vite/deps/three_examples_jsm_loaders_FBXLoader__js.js?v=de254aad";
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87CEEB);

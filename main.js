@@ -1,7 +1,7 @@
-import * as THREE from "/node_modules/.vite/deps/three.js?v=de254aad";
-import { OrbitControls } from "/node_modules/.vite/deps/three_examples_jsm_controls_OrbitControls__js.js?v=de254aad";
-import { GLTFLoader } from "/node_modules/.vite/deps/three_examples_jsm_loaders_GLTFLoader__js.js?v=de254aad";
-import { FBXLoader } from "/node_modules/.vite/deps/three_examples_jsm_loaders_FBXLoader__js.js?v=de254aad";
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 
 // import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js";
 // import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js";
@@ -185,7 +185,7 @@ class SimpleModel {
 }
 
 // Function to create models from the local JSON data
-function createModelsFromAPI(modelData) {
+function createModelsFromAPI(modelData){
     modelData.forEach(item => {
         const model = new SimpleModel(item.url, item.position, item.scale, item.type, item.status,item.description, item.components);
         model.load(scene);
@@ -213,9 +213,10 @@ function onMouseClick(event) {
                 if (model !== parentModel) {
                     model.setOpacity(0.5);
                 } else {
-                    model.setOpacity(1);
+                    
                     // Only move camera if the model type is not 'support'
                     if (parentModel.type !== 1) {
+                        model.setOpacity(1);
                         moveCameraToTarget(parentModel.model);
                     }
                 }
@@ -281,6 +282,3 @@ function animate() {
 }
 
 animate();
-
-
-

@@ -10,7 +10,7 @@
             {
                 "type": 2,
                 "url": "/models/ModelPc.glb",
-                "position": { "x": 1, "y": 0, "z": -2 },
+                "position": { "x": 10, "y": 0.5, "z": -2 },
                 "scale": 1,
                 "status": 1,
                 "description":"Working"
@@ -18,7 +18,7 @@
             {
                 "type": 2,
                 "url": "/models/ModelPc.glb",
-                "position": { "x": 3, "y": 0, "z": -2 },
+                "position": { "x": 15, "y": 0.5, "z": -2 },
                 "scale": 1,
                 "status": 2,
                 "description":"Not Working"
@@ -26,7 +26,7 @@
             {
                 "type": 2,
                 "url": "/models/ModelPc.glb",
-                "position": { "x": 5, "y": 0, "z": -2 },
+                "position": { "x": 20, "y": 0.5, "z": -2 },
                 "scale": 1,
                 "status": 1,
                 "description":"Working"
@@ -36,7 +36,7 @@
     {
         "type": 1,
         "url": "/models/Office_base06.glb",
-        "position": { "x": 10, "y": -0.5, "z": 0 },
+        "position": { "x": 24, "y": -0.5, "z": 0 },
         "scale": 4,
         "status": 1,
         "description":"Operational",
@@ -44,16 +44,17 @@
             {
                 "type": 2,
                 "url": "/models/ModelPc.glb",
-                "position": { "x": 1, "y": 0, "z": -2 },
+                "position": { "x": 1, "y": 0.5, "z": -2 },
                 "scale":  1,
+                "status": 1,
                 "description":"Working"
             },
             {
                 "type": 2,
                 "url": "/models/ModelPc.glb",
-                "position": { "x": 3, "y": 0, "z": -2 },
+                "position": { "x": 3, "y": 0.5, "z": -2 },
                 "scale": 1,
-                "status": 2,
+                "status": 1,
                 "description":"Working" 
             }
         ]

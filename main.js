@@ -185,7 +185,7 @@ class SimpleModel {
 }
 
 // Function to create models from the local JSON data
-function createModelsFromAPI(modelData) {
+function createModelsFromAPI(modelData){
     modelData.forEach(item => {
         const model = new SimpleModel(item.url, item.position, item.scale, item.type, item.status,item.description, item.components);
         model.load(scene);
@@ -213,9 +213,10 @@ function onMouseClick(event) {
                 if (model !== parentModel) {
                     model.setOpacity(0.5);
                 } else {
-                    model.setOpacity(1);
+                    
                     // Only move camera if the model type is not 'support'
                     if (parentModel.type !== 1) {
+                        model.setOpacity(1);
                         moveCameraToTarget(parentModel.model);
                     }
                 }

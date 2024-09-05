@@ -1,12 +1,7 @@
-import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
-
-// import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js";
-// import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js";
-// import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js";
-// import { FBXLoader } from "https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/FBXLoader.js";
+import * as THREE from '/lib/three.js';
+import { OrbitControls } from '/lib/OrbitControls.js';
+import { GLTFLoader } from '/lib/GLTFLoader.js';
+import { FBXLoader } from '/lib/FBXLoader.js';
 
 // Scene setup
 const scene = new THREE.Scene();
@@ -25,7 +20,7 @@ document.body.appendChild(renderer.domElement);
 
 // Controls setup
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
+controls.enableDamping = false;
 controls.dampingFactor = 0.2;
 controls.enableZoom = true;
 

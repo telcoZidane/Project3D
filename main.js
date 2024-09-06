@@ -7,7 +7,6 @@ import { FBXLoader } from '/lib/FBXLoader.js';
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87CEEB);
 
-
 // Camera setup
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(10, 10, 10);
@@ -22,7 +21,7 @@ document.body.appendChild(renderer.domElement);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = false;
 controls.dampingFactor = 0.2;
-controls.enableZoom = true;
+controls.enableZoom = true
 
 // Lights setup
 const lightLeft = new THREE.DirectionalLight(0xffffff, 5);
@@ -123,7 +122,6 @@ class SimpleModel {
                     child.userData = { parentModel: this };
                 }
             });
-
             scene.add(this.model);
 
             // Load child components if any
@@ -243,7 +241,6 @@ function moveCameraToTarget(target) {
             requestAnimationFrame(animateCamera);
         }
     }
-
     requestAnimationFrame(animateCamera);
 }
 
@@ -259,7 +256,6 @@ function displayStatusCard(model) {
         <p>Description: ${model.description || 'No description available'}</p>
     `;
 }
-
 
 // Fetch model data from local JSON and load models
 fetchModelData().then(data => {

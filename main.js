@@ -2,6 +2,7 @@ import * as THREE from '/lib/three.js';
 import { OrbitControls } from '/lib/OrbitControls.js';
 import { GLTFLoader } from '/lib/GLTFLoader.js';
 import { FBXLoader } from '/lib/FBXLoader.js';
+import { DragControls } from '/lib/DragControls.js';
 
 // Scene setup
 const scene = new THREE.Scene();
@@ -19,9 +20,9 @@ document.body.appendChild(renderer.domElement);
 
 // Controls setup
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = false;
+controls.enableDamping = true;
 controls.dampingFactor = 0.2;
-controls.enableZoom = true
+controls.enableZoom = true;
 
 // Lights setup
 const lightLeft = new THREE.DirectionalLight(0xffffff, 5);
@@ -38,22 +39,17 @@ const floorGeometry = new THREE.PlaneGeometry(1000, 1000);
 const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x808080 });
 const floor = new THREE.Mesh(floorGeometry, floorMaterial);
 floor.rotation.x = -Math.PI / 2;
-floor.position.set(0,-1,0) // Rotate floor to be horizontal
+floor.position.set(0, -1, 0); // Rotate floor to be horizontal
 scene.add(floor);
 
 let models = [];
+let draggableObjects = []; // Store draggable objects here
+let enabledDragModels = []; // Store models that can be dragged
 
 // Function to fetch data from the local JSON file
 async function fetchModelData() {
     try {
         const response = await fetch('models.json');
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('Received non-JSON response');
-        }
         const data = await response.json();
         return data;
     } catch (error) {
@@ -62,6 +58,7 @@ async function fetchModelData() {
     }
 }
 
+// EnumHandler, ModelsType, ModelStatus remain the same
 class EnumHandler {
     constructor(enumObject) {
         this.enumObject = enumObject;
@@ -87,24 +84,23 @@ const ModelsType = Object.freeze({
 });
 
 const ModelStatus = Object.freeze({
-    Suppoer: { displayName: "Suppoer Model", value: 0 },
+    Suppoer: { displayName: "Support Model", value: 0 },
     Working: { displayName: "Working", value: 1 },
     Not_Working: { displayName: "Not Working", value: 2 },
 });
 
-// Create instances of EnumHandler
 const modelsTypeHandler = new EnumHandler(ModelsType);
 const modelStatusHandler = new EnumHandler(ModelStatus);
 
 class SimpleModel {
-    constructor(url, position, scale, type, status,description, components = []) {
+    constructor(url, position, scale, type, status, description, components = []) {
         this.url = url;
         this.position = position;
         this.scale = scale;
         this.type = type;
         this.model = null;
         this.status = status;
-        this.description =description;
+        this.description = description;
         this.components = components;  // To store child components like PCs
     }
 
@@ -120,12 +116,17 @@ class SimpleModel {
             this.model.traverse((child) => {
                 if (child.isMesh) {
                     child.userData = { parentModel: this };
+                    // Set opacity to 0.5 on load
+                    child.material.transparent = true;
+                    child.material.opacity = 0.5;
                 }
             });
+
             scene.add(this.model);
 
             // Load child components if any
             this.loadComponents(scene);
+
             // Set initial color based on status
             this.updateColor();
         }, undefined, (error) => {
@@ -165,7 +166,7 @@ class SimpleModel {
 
     updateColor() {
         if (this.model) {
-            if(this.type!== 1){
+            if (this.type !== 1) {
                 const color = this.status === 1 ? 0x00ff00 : 0xff0000; // Green if active, red otherwise
                 this.model.traverse((child) => {
                     if (child.isMesh) {
@@ -178,11 +179,59 @@ class SimpleModel {
 }
 
 // Function to create models from the local JSON data
-function createModelsFromAPI(modelData){
+function createModelsFromAPI(modelData) {
     modelData.forEach(item => {
-        const model = new SimpleModel(item.url, item.position, item.scale, item.type, item.status,item.description, item.components);
+        const model = new SimpleModel(item.url, item.position, item.scale, item.type, item.status, item.description, item.components);
         model.load(scene);
         models.push(model);
+    });
+
+    // Setup Drag Controls without any draggable objects initially
+    setupDragControls();
+}
+
+// Setup Drag Controls
+let dragControls;
+function setupDragControls() {
+    dragControls = new DragControls(enabledDragModels, camera, renderer.domElement);
+
+    dragControls.addEventListener('dragstart', function (event) {
+        controls.enabled = false; // Disable orbit controls when dragging
+    });
+
+    dragControls.addEventListener('dragend', function (event) {
+        controls.enabled = true; // Re-enable orbit controls after dragging
+    });
+}
+
+// Function to enable dragging for a specific model
+function enableDragging(model) {
+    if (!enabledDragModels.includes(model.model)) {
+        enabledDragModels.push(model.model); // Add the model to the list of draggable objects
+    }
+
+    // Re-setup DragControls with the new draggable models
+    setupDragControls();
+}
+
+// Function to display the status card with a button to enable dragging
+function displayStatusCard(model) {
+    const statusCard = document.getElementById('status-card');
+    statusCard.style.display = 'block';
+
+    // Add a button to toggle dragging
+    statusCard.innerHTML = `
+        <h3>${modelsTypeHandler.getDisplayNameByValue(model.type)} Status</h3>
+        <p>Position: X=${model.position.x}, Y=${model.position.y}, Z=${model.position.z}</p>
+        <p>Status: ${modelStatusHandler.getDisplayNameByValue(model.status) || 'N/A'}</p>
+        <p>Description: ${model.description || 'No description available'}</p>
+        <button id="enable-drag-btn">Enable Drag</button>
+    `;
+
+    // Add event listener to the button to enable dragging
+    const dragButton = document.getElementById('enable-drag-btn');
+    dragButton.addEventListener('click', function () {
+        enableDragging(model);
     });
 }
 
@@ -206,7 +255,6 @@ function onMouseClick(event) {
                 if (model !== parentModel) {
                     model.setOpacity(0.5);
                 } else {
-                    
                     // Only move camera if the model type is not 'support'
                     if (parentModel.type !== 1) {
                         model.setOpacity(1);
@@ -241,23 +289,11 @@ function moveCameraToTarget(target) {
             requestAnimationFrame(animateCamera);
         }
     }
+
     requestAnimationFrame(animateCamera);
 }
 
-// Function to display the status card
-function displayStatusCard(model) {
-    const statusCard = document.getElementById('status-card');
-    statusCard.style.display = 'block';
-
-    statusCard.innerHTML = `
-        <h3>${modelsTypeHandler.getDisplayNameByValue(model.type)} Status</h3>
-        <p>Position: X=${model.position.x}, Y=${model.position.y}, Z=${model.position.z}</p>
-        <p>Status: ${modelStatusHandler.getDisplayNameByValue(model.status) || 'N/A'}</p>
-        <p>Description: ${model.description || 'No description available'}</p>
-    `;
-}
-
-// Fetch model data from local JSON and load models
+// Fetch model data and load models
 fetchModelData().then(data => {
     createModelsFromAPI(data);
 });
